@@ -1,88 +1,93 @@
-# REMEDA Stage340
+# REMEDA Stage341
 
-## Unified Verification Session Manifest
+## Signed Verification Session Manifest
 
-Stage340 connects the Stage254 session manifest concept to the Stage339 unified QSP behavior policy action result.
+Stage341 extends Stage340 by signing the verification session manifest.
 
 ## Purpose
 
-Stage339 produced a unified QSP decision:
+Stage340 created:
 
 ```text
-behavior decision
-↓
-trust score
-↓
-evidence match
-↓
-signature gate
-↓
-policy result
-↓
-action
-
-Stage340 binds that result into one verifiable session manifest.
-
-What Stage340 Adds
 qsp_session_result.json
+↓
 session_manifest.json
+↓
 local_witness.json
+↓
 session_anchor_receipt.json
-SHA256 binding for the session result
-SHA256 binding for the session manifest
-Preparation for later external anchoring
-Source Concepts
 
-Stage340 connects:
+Stage341 adds signatures and verification to the session manifest.
 
-Stage254: Session Manifest / Session Anchoring
-Stage331: Execution Session
-Stage332: Signed Execution Session
-Stage333: Transparency Log
-Stage339: Unified QSP Behavior Policy Action Gate
+session_manifest.json
+↓
+GPG signature
+↓
+Ed25519 witness signature
+↓
+Sigstore bundle
+↓
+independent verification
+What Stage341 Adds
+GPG detached signature for session_manifest.json
+Ed25519 witness signature
+Ed25519 witness public key
+allowed signers file
+Sigstore bundle
+Sigstore verification
+session_signature_manifest.json
+signed_session_manifest.json
 Public Files
-docs/session/qsp_session_result.json
 docs/session/session_manifest.json
-docs/witnesses/local_witness.json
-docs/anchors/session_anchor_receipt.json
-docs/behavior/unified_qsp_behavior_policy_action_result.json
-docs/index.html
-Private Files
+docs/session/session_manifest.json.gpg.asc
+docs/session/session_signature_manifest.json
+docs/session/signed_session_manifest.json
+docs/witnesses/session_manifest.ed25519.sig
+docs/witnesses/stage341_ed25519_witness.pub
+docs/witnesses/allowed_signers
+docs/anchors/session_manifest.sigstore.bundle
+Verification
 
-The following are intentionally excluded from GitHub:
+GPG:
 
-core/
-private/
-private_core/
-.venv/
-venv/
-.env
-secret keys
+gpg --verify docs/session/session_manifest.json.gpg.asc docs/session/session_manifest.json
+
+Ed25519 witness:
+
+ssh-keygen -Y verify \
+  -f docs/witnesses/allowed_signers \
+  -I stage341-ed25519-witness \
+  -n stage341-session-manifest \
+  -s docs/witnesses/session_manifest.ed25519.sig \
+  < docs/session/session_manifest.json
+
+Sigstore:
+
+cosign verify-blob \
+  --bundle docs/anchors/session_manifest.sigstore.bundle \
+  --certificate-identity "mokkun.suzuki@gmail.com" \
+  --certificate-oidc-issuer "https://github.com/login/oauth" \
+  docs/session/session_manifest.json
 Safety Boundary
 
-Stage340 does not publish:
+Stage341 does not publish:
 
+private keys
 attack code
 dangerous prompts
 exploit payloads
 bypass procedures
 automated attack logic
-private keys
 Meaning
 
-Stage340 turns the Stage339 decision into a verifiable session record.
+Stage341 proves:
 
-Stage339 decision
-↓
-qsp_session_result.json
-↓
-session_manifest.json
-↓
-local witness
-↓
-anchor receipt
+who signed the verification session manifest
+whether it was modified
+whether witness verification succeeds
+whether Sigstore verification succeeds
 
-This prepares the system for later signing, transparency logging, and external anchoring.
+This prepares the system for Stage342 External Anchor Layer.
 
 License
 
